@@ -7,8 +7,11 @@
     tools:context="com.pinoystartupdev.movieviewer.MainActivity">
 
     <TextView
+        android:id="@+id/textViewSample"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:clickable="true"
+        android:padding="8dp"
         android:text="Hello World!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
