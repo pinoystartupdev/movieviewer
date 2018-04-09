@@ -35,6 +35,7 @@ import butterknife.BindView;
 import butterknife.BindViews;
 import butterknife.ButterKnife;
 import by.anatoldeveloper.hallscheme.hall.HallScheme;
+import by.anatoldeveloper.hallscheme.hall.MaxSeatsClickListener;
 import by.anatoldeveloper.hallscheme.hall.ScenePosition;
 import by.anatoldeveloper.hallscheme.hall.Seat;
 import by.anatoldeveloper.hallscheme.hall.SeatListener;
@@ -218,13 +219,20 @@ public class SeatMapActivity extends AppCompatActivity {
                             @Override
                             public void generateSuccess(Seat[][] seats, final List<Pair<Integer, String>> seatNumberManifest) {
                                 if (imageView != null) {
-                                    HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
+                                    final HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
                                     scheme.setChosenSeatBackgroundColor(Color.RED);
                                     scheme.setChosenSeatTextColor(Color.WHITE);
                                     scheme.setBackgroundColor(Color.WHITE);
                                     scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
                                     scheme.setScenePosition(ScenePosition.NORTH);
                                     scheme.setSceneName("Movie Screen");
+                                    scheme.setMaxSelectedSeats(10);
+                                    scheme.setMaxSeatsClickListener(new MaxSeatsClickListener() {
+                                        @Override
+                                        public void maxSeatsReached(int id) {
+                                            Toast.makeText(SeatMapActivity.this, "Maximum of 10 seats only.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
 
                                     scheme.setSeatListener(new SeatListener() {
 
@@ -234,13 +242,15 @@ public class SeatMapActivity extends AppCompatActivity {
                                                 Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
 
                                                 if (seatNumber != null) {
-                                                    selectedSeatList.add(seatNumber);
+                                                    if (selectedSeatList.size() < 11) {
+                                                        selectedSeatList.add(seatNumber);
 
-                                                    ButterKnife.apply(viewsOfListsForSelectionDisplay, VISIBLE);
+                                                        ButterKnife.apply(viewsOfListsForSelectionDisplay, VISIBLE);
 
-                                                    recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
+                                                        recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
 
-                                                    updatePrice();
+                                                        updatePrice();
+                                                    }
                                                 } else {
                                                     Toast.makeText(SeatMapActivity.this, "can not select seat " + id, Toast.LENGTH_SHORT).show();
                                                 }
