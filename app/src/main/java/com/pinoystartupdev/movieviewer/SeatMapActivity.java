@@ -28,11 +28,14 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import by.anatoldeveloper.hallscheme.hall.HallScheme;
+import by.anatoldeveloper.hallscheme.hall.ScenePosition;
 import by.anatoldeveloper.hallscheme.hall.Seat;
 import by.anatoldeveloper.hallscheme.view.ZoomableImageView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.pinoystartupdev.movieviewer.util.SeatMapUtilities.generateSeatmap;
 
 public class SeatMapActivity extends AppCompatActivity {
     @BindView(R.id.spinnerMovieDates)
@@ -149,8 +152,6 @@ public class SeatMapActivity extends AppCompatActivity {
             }
         });
 
-
-
         /*SEAT MAP HERE*/
 
 
@@ -161,115 +162,19 @@ public class SeatMapActivity extends AppCompatActivity {
             public void onResponse(Call<SeatMap> call, Response<SeatMap> response) {
                 SeatMap seatMap = response.body();
 
-                Log.e("ajkhsdf", String.valueOf(seatMap.getSeatAvailablility().getSeatCount()));
+                /*LAYOUT SEATMAP*/
 
-//                Log.e("ajkhsdf", "++++++++++++++++++++++++++++++++++++++++++++++");
-//                Log.e("ajkhsdf", "+++++++++++++++ SEAT PLACEMENT +++++++++++++++");
-//                Log.e("ajkhsdf", "++++++++++++++++++++++++++++++++++++++++++++++");
-//
-//                char alphabet = 'A';
-//
-//                for (List<String> row : seatMap.getSeatPlacementList()) {
-//                    Log.e("ajkhsdf", "=============ROw "  + alphabet + "=============");
-//
-//                    for (String seatNumber : row) {
-//                        switch (seatNumber) {
-//                            case "a(30)":
-//                                Log.e("ajkhsdf", "[AISLE]");
-//                                break;
-//                            case "b(20)":
-//                                Log.e("ajkhsdf", "[AISLE]");
-//                                break;
-//                            default:
-//                                Log.e("ajkhsdf", "SEAT_NUMBER>>>" + seatNumber);
-//                        }
-//                    }
-//
-//                    alphabet++;
-//                }
+                Seat seats[][] = generateSeatmap(seatMap);
 
-                Log.e("ajkhsdf", "+++++++++++++++++++++++++++++++++++++++++++++++++");
-                Log.e("ajkhsdf", "+++++++++++++++ SEAT AVAILABILITY +++++++++++++++");
-                Log.e("ajkhsdf", "+++++++++++++++++++++++++++++++++++++++++++++++++");
-
-                char alphabet = 'A';
-                int availableSeats = 0;
-                int reservedSeats = 0;
-                int totalSeats = 0;
-                int placeholder = 0;
-
-                for (List<String> row : seatMap.getSeatPlacementList()) {
-                    Log.e("ajkhsdf", "=============ROw "  + alphabet + "=============");
-
-                    for (String seatNumber : row) {
-                        switch (seatNumber) {
-                            case "a(30)":
-                            case "b(20)":
-                            case "A33":
-                                String left = "";
-                                String right = "";
-
-                                try {
-                                    left = row.get(row.indexOf(seatNumber) - 1) + "<<<";
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-                                try {
-                                    right = ">>>" + row.get(row.indexOf(seatNumber) + 1);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-
-                                Log.e("ajkhsdf", left  + "[AISLE]" + right);
-                                placeholder++;
-                                break;
-                            default:
-                                if (seatMap.getSeatAvailablility().getAvailableSeatsList().indexOf(seatNumber) != -1) {
-                                    Log.e("ajkhsdf", seatNumber + " AVAILABLE");
-
-                                    availableSeats ++;
-                                } else {
-                                    Log.e("ajkhsdf", seatNumber + " RESERVED");
-
-                                    reservedSeats ++;
-                                }
-
-                                totalSeats ++;
-                        }
-                    }
-
-                    alphabet++;
-                }
-
-                Log.e("ajkhsdf", totalSeats + "TOTAL SEATS");
-                Log.e("ajkhsdf", availableSeats + "AVAILABLE SEATS");
-                Log.e("ajkhsdf", reservedSeats + "AVAILABLE SEATS");
-                Log.e("ajkhsdf", placeholder + "PLACEHOLDER");
-            }
-
-            @Override
-            public void onFailure(Call<SeatMap> call, Throwable t) {
-                Log.e("ajkhsdf", "FAILURE>>>" + t.getMessage());
-            }
-        });
-
-        /*LAYOUT SEATMAP*/
-
-        Seat seats[][] = basicScheme();
-
-        if (seats[0][0] != null) {
-            Log.e("asfdad", "seats IS NOT NULL");
-        } else {
-            Log.e("asfdad", "seats IS NULL");
-        }
-
-
-        if (imageView != null) {
-            Log.e("asfdad", "imageView IS NOT NULL");
-            HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
-            scheme.setChosenSeatBackgroundColor(Color.RED);
-            scheme.setChosenSeatTextColor(Color.WHITE);
+                if (imageView != null) {
+                    Log.e("asfdad", "imageView IS NOT NULL");
+                    HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
+                    scheme.setChosenSeatBackgroundColor(Color.RED);
+                    scheme.setChosenSeatTextColor(Color.WHITE);
+                    scheme.setBackgroundColor(Color.WHITE);
+                    scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
+                    scheme.setScenePosition(ScenePosition.NORTH);
+                    scheme.setSceneName("Movie Screen");
 
 //            scheme.setSeatListener(new SeatListener() {
 //
@@ -284,105 +189,16 @@ public class SeatMapActivity extends AppCompatActivity {
 //                }
 //
 //            });
-        } else {
-            Log.e("asfdad", "imageView IS NULL");
-        }
-
-
-    }
-
-    public Seat[][] basicScheme() {
-        Seat seats[][] = new Seat[5][10];
-        for (int i = 0; i < 5; i++)
-            for(int j = 0; j < 10; j++) {
-                SeatExample seat = new SeatExample();
-                seat.id = i * 10 + (j+1);
-                seat.selectedSeatMarker = "\u2713";
-                seat.status = HallScheme.SeatStatus.FREE;
-                seats[i][j] = seat;
+                } else {
+                    Log.e("asfdad", "imageView IS NULL");
+                }
             }
-        return seats;
-    }
 
-    public Seat[][] basicSchemeWithMarker() {
-        Seat seats[][] = new Seat[12][18];
-        int k = 0;
-        for (int i = 0; i < 12; i++)
-            for(int j = 0; j < 18; j++) {
-                SeatExample seat = new SeatExample();
-                seat.id = ++k;
-                seat.selectedSeatMarker = String.valueOf(i+1);
-                seat.status = HallScheme.SeatStatus.BUSY;
-                if (j == 0 || j == 17) {
-                    seat.status = HallScheme.SeatStatus.EMPTY;
-                    if (i > 2 && i < 10) {
-                        seat.marker = String.valueOf(i);
-                        seat.status = HallScheme.SeatStatus.INFO;
-                    }
-                }
-                if (((j > 0 && j < 3) || (j > 14 && j < 17)) && i == 0) {
-                    seat.status = HallScheme.SeatStatus.EMPTY;
-                    if (j == 2 || j == 15) {
-                        seat.marker = String.valueOf(i+1);
-                        seat.status = HallScheme.SeatStatus.INFO;
-                    }
-                }
-                if (((j > 0 && j < 2) || (j > 15 && j < 17)) && i == 1) {
-                    seat.status = HallScheme.SeatStatus.EMPTY;
-                    if (j == 1 || j == 16) {
-                        seat.marker = String.valueOf(i+1);
-                        seat.status = HallScheme.SeatStatus.INFO;
-                    }
-                }
-                if (i == 2)
-                    seat.status = HallScheme.SeatStatus.EMPTY;
-                if (i > 9 && (j == 1 || j == 16)) {
-                    seat.status = HallScheme.SeatStatus.INFO;
-                    seat.marker = String.valueOf(i);
-                }
-                seats[i][j] = seat;
+            @Override
+            public void onFailure(Call<SeatMap> call, Throwable t) {
+                Log.e("ajkhsdf", "FAILURE>>>" + t.getMessage());
             }
-        return seats;
-    }
-
-    public class SeatExample implements Seat {
-
-        public int id;
-        public int color = Color.GRAY;
-        public String marker;
-        public String selectedSeatMarker;
-        public HallScheme.SeatStatus status;
-
-        @Override
-        public int id() {
-            return id;
-        }
-
-        @Override
-        public int color() {
-            return color;
-        }
-
-        @Override
-        public String marker() {
-            return marker;
-        }
-
-        @Override
-        public String selectedSeat() {
-            return selectedSeatMarker;
-        }
-
-        @Override
-        public HallScheme.SeatStatus status() {
-            return status;
-        }
-
-        @Override
-        public void setStatus(HallScheme.SeatStatus status) {
-            this.status = status;
-        }
-
+        });
     }
 
     class MySpinnerMovieDateOnItemSelectedListener implements AdapterView.OnItemSelectedListener {
