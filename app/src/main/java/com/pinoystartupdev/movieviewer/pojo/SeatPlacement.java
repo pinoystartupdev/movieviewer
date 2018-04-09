@@ -1,8 +1,15 @@
 package com.pinoystartupdev.movieviewer.pojo;
 
-/**
- * Created by mappynose on 05/04/2018.
- */
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
+
+
 
 public class SeatPlacement {
+    @SerializedName("") List<String> stringList;
+
+    public List<String> getStringList() {
+        return stringList;
+    }
 }
