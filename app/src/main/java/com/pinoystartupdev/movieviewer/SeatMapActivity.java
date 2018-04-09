@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pinoystartupdev.movieviewer.network.APIClient;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
+import butterknife.BindViews;
 import butterknife.ButterKnife;
 import by.anatoldeveloper.hallscheme.hall.HallScheme;
 import by.anatoldeveloper.hallscheme.hall.ScenePosition;
@@ -47,6 +49,13 @@ public class SeatMapActivity extends AppCompatActivity {
     @BindView(R.id.spinnerMovieTimes)
     Spinner spinnerMovieTimes;
 
+    @BindView(R.id.textViewColorSelected) View textViewColorSelected;
+    @BindView(R.id.textViewColorReserved) View textViewColorReserved;
+    @BindView(R.id.textViewColorAvailable) View textViewColorAvailable;
+
+    @BindViews({ R.id.textViewSelectedSeatsLabel, R.id.recyclerViewSelectedSeats, R.id.textViewTotalPriceLabel, R.id.textViewTotalPrice })
+    List<View> viewsOfListsForSelectionDisplay;
+
     List<MovieScheduleDate>  movieScheduleDateList;
     List<MovieScheduleCinemas> movieScheduleCinemasList;
     List<MovieScheduleTimes>  movieScheduleTimesList;
@@ -55,6 +64,17 @@ public class SeatMapActivity extends AppCompatActivity {
 
     @BindView(R.id.imageView)
     ZoomableImageView imageView;
+
+    static final ButterKnife.Action<View> GONE = new ButterKnife.Action<View>() {
+        @Override public void apply(View view, int index) {
+            view.setVisibility(View.GONE);
+        }
+    };
+    static final ButterKnife.Setter<View, Boolean> VISIBLE = new ButterKnife.Setter<View, Boolean>() {
+        @Override public void set(View view, Boolean value, int index) {
+            view.setVisibility(View.VISIBLE);
+        }
+    };
 
     public static Intent newInstance(Context context) {
         return new Intent(context, SeatMapActivity.class);
@@ -66,9 +86,16 @@ public class SeatMapActivity extends AppCompatActivity {
         setContentView(R.layout.activity_seat_map);
         ButterKnife.bind(this);
 
+        ButterKnife.apply(viewsOfListsForSelectionDisplay, GONE);
+
         movieScheduleDateList = new ArrayList<>();
         movieScheduleCinemasList = new ArrayList<>();
         movieScheduleTimesList = new ArrayList<>();
+
+        textViewColorAvailable.setBackgroundColor(Color.GRAY);
+        textViewColorReserved.setBackgroundColor(Color.BLUE);
+        textViewColorSelected.setBackgroundColor(Color.RED);
+        ((TextView) textViewColorSelected).setText(" \u2713");
 
         MovieViewerNetworkInterface movieViewerNetworkInterface = APIClient.getClient().create(MovieViewerNetworkInterface.class);
 
