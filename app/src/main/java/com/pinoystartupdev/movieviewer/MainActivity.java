@@ -17,6 +17,9 @@ import com.pinoystartupdev.movieviewer.pojo.MultipleResource;
 import com.pinoystartupdev.movieviewer.pojo.SeatMap;
 import com.squareup.picasso.Picasso;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -52,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.textViewSynopsis)
     TextView textViewSynopsis;
 
+    @BindView(R.id.textViewCast)
+    TextView textViewCast;
+
     @OnClick(R.id.textViewViewSeatMap)
     public void gotoSeatMapScreen() {
         Intent intent = SeatMapActivity.newInstance(MainActivity.this);
@@ -77,9 +83,36 @@ public class MainActivity extends AppCompatActivity {
                 textViewCanonicalTitle.setText(movie.getCanonicalTitle());
                 textViewGenre.setText(movie.getGenre());
                 textViewAdvisoryRating.setText(movie.getAdvisoryRating());
-                textViewRuntime.setText(movie.getRuntimeMins());
-                textViewReleaseDate.setText(movie.getReleaseDate());
+
+                float runtime = Float.valueOf(movie.getRuntimeMins());
+                int hour = (int) runtime / 60;
+                int minutes = (int) (runtime % 60 );
+
+                String formattedHour =  (hour > 1) ? hour + "hrs" : "hr";
+                String formattedMinutes = (minutes > 1) ? minutes + "mins" : minutes + "min";
+
+                String formattedRunTime = formattedHour + " " + formattedMinutes;
+
+                textViewRuntime.setText(formattedRunTime);
+
+                SimpleDateFormat simpleDateFormatInput = new SimpleDateFormat("yyyy-mm-dd");
+                SimpleDateFormat simpleDateFormatOutput = new SimpleDateFormat("MMM dd, yyyy");
+
+                try {
+                    Date date = simpleDateFormatInput.parse(movie.getReleaseDate());
+                    textViewReleaseDate.setText(simpleDateFormatOutput.format(date));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 textViewSynopsis.setText(movie.getSynopsis());
+
+                StringBuilder casts = new StringBuilder();
+
+                for (String castname : movie.getCast()) {
+                    casts.append(castname.concat("\n"));
+                }
+                textViewCast.setText(casts);
 
                 Picasso.get().load(movie.getPosterLandscape()).into(imageViewPosterLandscape);
                 Picasso.get().load(movie.getPoster()).into(imageViewPoster);

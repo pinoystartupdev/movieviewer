@@ -161,6 +161,22 @@
                         android:layout_height="wrap_content"
                         android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent nec libero neque. Nam scelerisque neque non leo accumsan vulputate. Aenean risus risus, venenatis sit amet placerat quis, posuere vitae odio. Vivamus efficitur aliquam leo, id pharetra massa volutpat efficitur. Donec vitae finibus ante, vitae porttitor urna. Proin ac egestas dui. Aliquam volutpat magna lorem, quis finibus massa euismod eget. Praesent pharetra, sapien quis scelerisque hendrerit, purus enim vulputate mi, nec tristique augue justo facilisis dolor."
                         android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cast:" />
+
+                    <TextView
+                        android:id="@+id/textViewCast"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CAST"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
             </android.support.constraint.ConstraintLayout>

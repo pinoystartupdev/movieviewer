@@ -2,6 +2,8 @@ package com.pinoystartupdev.movieviewer.pojo;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 public class Movie {
     @SerializedName("movie_id") String movieId;
     @SerializedName("canonical_title") String canonicalTitle;
@@ -10,6 +12,8 @@ public class Movie {
     @SerializedName("runtime_mins") String runtimeMins;
     @SerializedName("release_date") String releaseDate;
     @SerializedName("synopsis") String synopsis;
+    @SerializedName("cast")
+    List<String> cast;
     @SerializedName("poster") String poster;
     @SerializedName("poster_landscape") String posterLandscape;
 
@@ -47,5 +51,9 @@ public class Movie {
 
     public String getPosterLandscape() {
         return posterLandscape;
+    }
+
+    public List<String> getCast() {
+        return cast;
     }
 }
