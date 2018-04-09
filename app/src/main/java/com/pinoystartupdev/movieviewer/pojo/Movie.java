@@ -16,6 +16,7 @@ public class Movie {
     List<String> cast;
     @SerializedName("poster") String poster;
     @SerializedName("poster_landscape") String posterLandscape;
+    @SerializedName("theater") String theater;
 
     public String getMovieId() {
         return movieId;
@@ -55,5 +56,9 @@ public class Movie {
 
     public List<String> getCast() {
         return cast;
+    }
+
+    public String getTheater() {
+        return theater;
     }
 }

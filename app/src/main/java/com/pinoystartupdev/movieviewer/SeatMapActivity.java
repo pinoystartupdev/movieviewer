@@ -48,6 +48,11 @@ import retrofit2.Response;
 import static com.pinoystartupdev.movieviewer.util.SeatMapUtilities.generateSeatmap;
 
 public class SeatMapActivity extends AppCompatActivity {
+    public static final String EXTRA_THEATER_NAME = "com.pinoystartupdev.movieviewer.activity.SeatMapActivity.EXTRA_THEATER_NAME";
+
+    @BindView(R.id.textViewTheaterName)
+    TextView textViewTheaterName;
+
     @BindView(R.id.spinnerMovieDates)
     Spinner spinnerMovieDates;
 
@@ -96,8 +101,12 @@ public class SeatMapActivity extends AppCompatActivity {
         }
     };
 
-    public static Intent newInstance(Context context) {
-        return new Intent(context, SeatMapActivity.class);
+    public static Intent newInstance(Context context, String theaterName) {
+        Intent intent = new Intent(context, SeatMapActivity.class);
+
+        intent.putExtra(EXTRA_THEATER_NAME, theaterName);
+
+        return intent;
     }
 
     @Override
@@ -107,6 +116,8 @@ public class SeatMapActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         ButterKnife.apply(viewsOfListsForSelectionDisplay, INVISIBLE);
+
+        textViewTheaterName.setText(getIntent().getStringExtra(EXTRA_THEATER_NAME));
 
         movieScheduleDateList = new ArrayList<>();
         movieScheduleCinemasList = new ArrayList<>();

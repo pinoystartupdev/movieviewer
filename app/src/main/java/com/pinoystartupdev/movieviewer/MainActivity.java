@@ -58,11 +58,18 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.textViewCast)
     TextView textViewCast;
 
+    Movie movie;
+
+    @BindView(R.id.textViewViewSeatMap)
+    View textViewViewSeatMap;
+
     @OnClick(R.id.textViewViewSeatMap)
     public void gotoSeatMapScreen() {
-        Intent intent = SeatMapActivity.newInstance(MainActivity.this);
+        if (movie != null) {
+            Intent intent = SeatMapActivity.newInstance(MainActivity.this, movie.getTheater());
 
-        startActivity(intent);
+            startActivity(intent);
+        }
     }
 
     @Override
@@ -71,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        textViewViewSeatMap.setVisibility(View.GONE);
+
         MovieViewerNetworkInterface movieViewerNetworkInterface = APIClient.getClient().create(MovieViewerNetworkInterface.class);
 
         Call<Movie> movieCall = movieViewerNetworkInterface.getMovieDetails();
@@ -78,7 +87,8 @@ public class MainActivity extends AppCompatActivity {
         movieCall.enqueue(new Callback<Movie>() {
             @Override
             public void onResponse(Call<Movie> call, Response<Movie> response) {
-                Movie movie = response.body();
+                textViewViewSeatMap.setVisibility(View.VISIBLE);
+                movie = response.body();
 
                 textViewCanonicalTitle.setText(movie.getCanonicalTitle());
                 textViewGenre.setText(movie.getGenre());
