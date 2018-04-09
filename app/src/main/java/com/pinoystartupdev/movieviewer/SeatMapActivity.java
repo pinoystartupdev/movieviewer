@@ -62,14 +62,20 @@ public class SeatMapActivity extends AppCompatActivity {
     @BindView(R.id.recyclerViewSelectedSeats)
     RecyclerView recyclerViewSelectedSeats;
 
+    @BindView(R.id.textViewTotalPrice)
+    TextView textViewTotalPrice;
+
     @BindViews({ R.id.textViewSelectedSeatsLabel, R.id.recyclerViewSelectedSeats, R.id.textViewTotalPriceLabel, R.id.textViewTotalPrice })
     List<View> viewsOfListsForSelectionDisplay;
 
     List<MovieScheduleDate>  movieScheduleDateList;
     List<MovieScheduleCinemas> movieScheduleCinemasList;
     List<MovieScheduleTimes>  movieScheduleTimesList;
-    MovieScheduleCinemas movieScheduleCinemas;
-    MovieScheduleTimes movieScheduleTimes;
+
+    List<MovieScheduleCinemaDetails> movieScheduleCinemaDetailsList;
+    List<MovieScheduleTimesDetails> movieScheduleTimesDetailsList;
+
+    MovieScheduleTimesDetails currentMovieScheduleTimeDetails;
 
     List<Pair<Integer, String>> selectedSeatList;
     List<String> seatNumberManifest;
@@ -104,6 +110,9 @@ public class SeatMapActivity extends AppCompatActivity {
         movieScheduleCinemasList = new ArrayList<>();
         movieScheduleTimesList = new ArrayList<>();
 
+        movieScheduleCinemaDetailsList = new ArrayList<>();
+        movieScheduleTimesDetailsList = new ArrayList<>();
+
         selectedSeatList = new ArrayList<>();
         seatNumberManifest = new ArrayList<>();
 
@@ -117,7 +126,7 @@ public class SeatMapActivity extends AppCompatActivity {
         recyclerViewSelectedSeats.setAdapter(new SelectedSeatRecyclerViewAdapter(SeatMapActivity.this, selectedSeatList));
 
 
-        MovieViewerNetworkInterface movieViewerNetworkInterface = APIClient.getClient().create(MovieViewerNetworkInterface.class);
+        final MovieViewerNetworkInterface movieViewerNetworkInterface = APIClient.getClient().create(MovieViewerNetworkInterface.class);
 
         Call<MovieSchedule> movieScheduleCall = movieViewerNetworkInterface.getMovieSchedule();
         movieScheduleCall.enqueue(new Callback<MovieSchedule>() {
@@ -141,6 +150,7 @@ public class SeatMapActivity extends AppCompatActivity {
 
                 movieScheduleDateArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerMovieDates.setAdapter(movieScheduleDateArrayAdapter);
+
                 spinnerMovieDates.setOnItemSelectedListener(new MySpinnerMovieDateOnItemSelectedListener());
 
                 /*set CINEMA DROP DOWN*/
@@ -149,9 +159,9 @@ public class SeatMapActivity extends AppCompatActivity {
 
                 for (MovieScheduleCinemas movieScheduleCinemas : movieScheduleCinemasList) {
                     if (movieScheduleDateList.get(0).getId().equals(movieScheduleCinemas.getParent())) {
-                        SeatMapActivity.this.movieScheduleCinemas = movieScheduleCinemas;
+                        movieScheduleCinemaDetailsList.addAll(movieScheduleCinemas.getMovieScheduleCinemaDetailsList());
 
-                        for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : SeatMapActivity.this.movieScheduleCinemas.getMovieScheduleCinemaDetailsList()) {
+                        for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemaDetailsList) {
                             movieScheduleCinemaDetailsLabelList.add(movieScheduleCinemaDetails.getLabel());
                         }
 
@@ -171,18 +181,16 @@ public class SeatMapActivity extends AppCompatActivity {
                 List<String> movieScheduleTimeDetailsLabelList = new ArrayList<>();
 
                 for (MovieScheduleTimes movieScheduleTimes : movieScheduleTimesList) {
-                    for (MovieScheduleCinemas movieScheduleCinemas : movieScheduleCinemasList) {
-                        if (movieScheduleDateList.get(0).getId().equals(movieScheduleCinemas.getParent())) {
-                            for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemas.getMovieScheduleCinemaDetailsList()) {
-                                if (movieScheduleCinemaDetails.getId().equals(movieScheduleTimes.getParent())) {
-                                    SeatMapActivity.this.movieScheduleTimes =  movieScheduleTimes;
+                    for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemaDetailsList) {
+                        if (movieScheduleCinemaDetails.getId().equals(movieScheduleTimes.getParent())) {
+                            movieScheduleTimesDetailsList.addAll(movieScheduleTimes.getMovieScheduleTimesDetailsList());
 
-                                    for (MovieScheduleTimesDetails movieScheduleTimesDetails : SeatMapActivity.this.movieScheduleTimes.getMovieScheduleTimesDetailsList()) {
-                                        movieScheduleTimeDetailsLabelList.add(movieScheduleTimesDetails.getLabel());
-                                    }
-                                    break;
-                                }
+                            currentMovieScheduleTimeDetails = movieScheduleTimesDetailsList.get(0);
+
+                            for (MovieScheduleTimesDetails movieScheduleTimesDetails : movieScheduleTimesDetailsList) {
+                                movieScheduleTimeDetailsLabelList.add(movieScheduleTimesDetails.getLabel());
                             }
+                            break;
                         }
                     }
                 }
@@ -191,6 +199,91 @@ public class SeatMapActivity extends AppCompatActivity {
 
                 movieScheduleTimeDetailsArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spinnerMovieTimes.setAdapter(movieScheduleTimeDetailsArrayAdapter);
+
+                spinnerMovieTimes.setOnItemSelectedListener(new MySpinnerMovieTimeOnItemSelectedListener());
+
+                        /*ASSEMBLE SEAT MAP HERE*/
+
+
+                Call<SeatMap> seatMapCall = movieViewerNetworkInterface.getSeatMap();
+
+                seatMapCall.enqueue(new Callback<SeatMap>() {
+                    @Override
+                    public void onResponse(Call<SeatMap> call, Response<SeatMap> response) {
+                        SeatMap seatMap = response.body();
+
+                /*LAYOUT SEATMAP*/
+
+                        generateSeatmap(seatMap, new SeatMapUtilities.MySeatMapCallback() {
+                            @Override
+                            public void generateSuccess(Seat[][] seats, final List<Pair<Integer, String>> seatNumberManifest) {
+                                if (imageView != null) {
+                                    HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
+                                    scheme.setChosenSeatBackgroundColor(Color.RED);
+                                    scheme.setChosenSeatTextColor(Color.WHITE);
+                                    scheme.setBackgroundColor(Color.WHITE);
+                                    scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
+                                    scheme.setScenePosition(ScenePosition.NORTH);
+                                    scheme.setSceneName("Movie Screen");
+
+                                    scheme.setSeatListener(new SeatListener() {
+
+                                        @Override
+                                        public void selectSeat(int id) {
+                                            if (currentMovieScheduleTimeDetails != null) {
+                                                Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
+
+                                                if (seatNumber != null) {
+                                                    selectedSeatList.add(seatNumber);
+
+                                                    ButterKnife.apply(viewsOfListsForSelectionDisplay, VISIBLE);
+
+                                                    recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
+
+                                                    updatePrice();
+                                                } else {
+                                                    Toast.makeText(SeatMapActivity.this, "can not select seat " + id, Toast.LENGTH_SHORT).show();
+                                                }
+                                            } else {
+                                                Toast.makeText(SeatMapActivity.this, "currentMovieScheduleTimeDetails IS NULL", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void unSelectSeat(int id) {
+                                            try {
+                                                Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
+
+                                                if (seatNumber != null) {
+                                                    selectedSeatList.remove(seatNumber);
+
+                                                    if (!(selectedSeatList.size() > 0)) {
+                                                        ButterKnife.apply(viewsOfListsForSelectionDisplay, INVISIBLE);
+                                                    }
+
+                                                    recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
+
+                                                    updatePrice();
+                                                } else {
+                                                    Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
+                                                }
+                                            } catch (IndexOutOfBoundsException e) {
+                                                e.printStackTrace();
+
+                                                Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Call<SeatMap> call, Throwable t) {
+                        Toast.makeText(SeatMapActivity.this, "Failed to load seat map.", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
@@ -198,84 +291,12 @@ public class SeatMapActivity extends AppCompatActivity {
                 Toast.makeText(SeatMapActivity.this, "Failed to load movie schedule.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
 
-        /*SEAT MAP HERE*/
+    private void updatePrice() {
+        int currentPrice = Integer.valueOf(currentMovieScheduleTimeDetails.getPrice()) * selectedSeatList.size();
 
-
-        Call<SeatMap> seatMapCall = movieViewerNetworkInterface.getSeatMap();
-
-        seatMapCall.enqueue(new Callback<SeatMap>() {
-            @Override
-            public void onResponse(Call<SeatMap> call, Response<SeatMap> response) {
-                SeatMap seatMap = response.body();
-
-                /*LAYOUT SEATMAP*/
-
-                generateSeatmap(seatMap, new SeatMapUtilities.MySeatMapCallback() {
-                    @Override
-                    public void generateSuccess(Seat[][] seats, final List<Pair<Integer, String>> seatNumberManifest) {
-                        if (imageView != null) {
-                            HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
-                            scheme.setChosenSeatBackgroundColor(Color.RED);
-                            scheme.setChosenSeatTextColor(Color.WHITE);
-                            scheme.setBackgroundColor(Color.WHITE);
-                            scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
-                            scheme.setScenePosition(ScenePosition.NORTH);
-                            scheme.setSceneName("Movie Screen");
-
-                            scheme.setSeatListener(new SeatListener() {
-
-                                @Override
-                                public void selectSeat(int id) {
-                                    Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
-
-                                    if (seatNumber != null) {
-                                        selectedSeatList.add(seatNumber);
-
-                                        ButterKnife.apply(viewsOfListsForSelectionDisplay, VISIBLE);
-
-                                        recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
-                                    } else {
-                                        Toast.makeText(SeatMapActivity.this, "can not select seat " + id, Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                                @Override
-                                public void unSelectSeat(int id) {
-                                    try {
-                                        Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
-
-                                        if (seatNumber != null) {
-                                            selectedSeatList.remove(seatNumber);
-
-                                            if (!(selectedSeatList.size() > 0)) {
-                                                ButterKnife.apply(viewsOfListsForSelectionDisplay, INVISIBLE);
-                                            }
-
-                                            recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
-                                        } else {
-                                            Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
-                                        }
-                                    } catch (IndexOutOfBoundsException e) {
-                                        e.printStackTrace();
-
-                                        Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                            });
-                        }
-                    }
-                });
-
-
-            }
-
-            @Override
-            public void onFailure(Call<SeatMap> call, Throwable t) {
-                Toast.makeText(SeatMapActivity.this, "Failed to load seat map.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        textViewTotalPrice.setText("PHP".concat(String.valueOf(currentPrice)));
     }
 
     class MySpinnerMovieDateOnItemSelectedListener implements AdapterView.OnItemSelectedListener {
@@ -285,15 +306,20 @@ public class SeatMapActivity extends AppCompatActivity {
             /*set CINEMA DROP DOWN*/
 
             List<String> movieScheduleCinemaDetailsLabelList = new ArrayList<>();
+            movieScheduleCinemaDetailsList.clear();
 
             MovieScheduleDate movieScheduleDate = movieScheduleDateList.get(i);
 
             for (MovieScheduleCinemas movieScheduleCinemas : movieScheduleCinemasList) {
                 if (movieScheduleDate.getId().equals(movieScheduleCinemas.getParent())) {
-                    SeatMapActivity.this.movieScheduleCinemas = movieScheduleCinemas;
+                    movieScheduleCinemaDetailsList.addAll(movieScheduleCinemas.getMovieScheduleCinemaDetailsList());
 
-                    for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : SeatMapActivity.this.movieScheduleCinemas.getMovieScheduleCinemaDetailsList()) {
+                    for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemaDetailsList) {
                         movieScheduleCinemaDetailsLabelList.add(movieScheduleCinemaDetails.getLabel());
+                    }
+
+                    if (selectedSeatList.size() > 0) {
+                        updatePrice();
                     }
 
                     break;
@@ -309,23 +335,23 @@ public class SeatMapActivity extends AppCompatActivity {
             /*set TIME DROP DOWN*/
 
             List<String> movieScheduleTimeDetailsLabelList = new ArrayList<>();
+            movieScheduleTimesDetailsList.clear();
 
             for (MovieScheduleTimes movieScheduleTimes : movieScheduleTimesList) {
-                for (MovieScheduleCinemas movieScheduleCinemas : movieScheduleCinemasList) {
-                    if (movieScheduleDate.getId().equals(movieScheduleCinemas.getParent())) {
-                        for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemas.getMovieScheduleCinemaDetailsList()) {
-                            if (movieScheduleCinemaDetails.getId().equals(movieScheduleTimes.getParent())) {
-                                SeatMapActivity.this.movieScheduleTimes =  movieScheduleTimes;
+                for (MovieScheduleCinemaDetails movieScheduleCinemaDetails : movieScheduleCinemaDetailsList) {
+                    if (movieScheduleCinemaDetails.getId().equals(movieScheduleTimes.getParent())) {
+                        movieScheduleTimesDetailsList.addAll(movieScheduleTimes.getMovieScheduleTimesDetailsList());
+                        currentMovieScheduleTimeDetails = movieScheduleTimesDetailsList.get(0);
 
-                                for (MovieScheduleTimesDetails movieScheduleTimesDetails : SeatMapActivity.this.movieScheduleTimes.getMovieScheduleTimesDetailsList()) {
-                                    movieScheduleTimeDetailsLabelList.add(movieScheduleTimesDetails.getLabel());
-                                }
-                                break;
-                            }
+                        for (MovieScheduleTimesDetails movieScheduleTimesDetails : movieScheduleTimesDetailsList) {
+                            movieScheduleTimeDetailsLabelList.add(movieScheduleTimesDetails.getLabel());
                         }
+                        break;
                     }
                 }
             }
+
+            Log.e("jhagdfs", "movieScheduleTimeDetailsLabelList:" + movieScheduleTimeDetailsLabelList.size());
 
             ArrayAdapter<String> movieScheduleTimeDetailsArrayAdapter = new ArrayAdapter<String>(SeatMapActivity.this, android.R.layout.simple_spinner_item, movieScheduleTimeDetailsLabelList);
 
@@ -346,16 +372,22 @@ public class SeatMapActivity extends AppCompatActivity {
         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
             /*set TIME DROP DOWN*/
 
-            MovieScheduleCinemaDetails movieScheduleCinemaDetails = movieScheduleCinemas.getMovieScheduleCinemaDetailsList().get(i);
+            MovieScheduleCinemaDetails movieScheduleCinemaDetails = movieScheduleCinemaDetailsList.get(i);
 
             List<String> movieScheduleTimeDetailsLabelList = new ArrayList<>();
+            movieScheduleTimesDetailsList.clear();
 
             for (MovieScheduleTimes movieScheduleTimes : movieScheduleTimesList) {
                 if (movieScheduleCinemaDetails.getId().equals(movieScheduleTimes.getParent())) {
-                    SeatMapActivity.this.movieScheduleTimes =  movieScheduleTimes;
+                    movieScheduleTimesDetailsList.addAll(movieScheduleTimes.getMovieScheduleTimesDetailsList());
+                    currentMovieScheduleTimeDetails = movieScheduleTimesDetailsList.get(0);
 
-                    for (MovieScheduleTimesDetails movieScheduleTimesDetails : SeatMapActivity.this.movieScheduleTimes.getMovieScheduleTimesDetailsList()) {
+                    for (MovieScheduleTimesDetails movieScheduleTimesDetails : movieScheduleTimesDetailsList) {
                         movieScheduleTimeDetailsLabelList.add(movieScheduleTimesDetails.getLabel());
+                    }
+
+                    if (selectedSeatList.size() > 0) {
+                        updatePrice();
                     }
                     break;
                 }
@@ -366,6 +398,23 @@ public class SeatMapActivity extends AppCompatActivity {
             movieScheduleTimeDetailsArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerMovieTimes.setAdapter(null);
             spinnerMovieTimes.setAdapter(movieScheduleTimeDetailsArrayAdapter);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+
+        }
+    }
+
+    class MySpinnerMovieTimeOnItemSelectedListener implements AdapterView.OnItemSelectedListener {
+
+        @Override
+        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+            currentMovieScheduleTimeDetails = movieScheduleTimesDetailsList.get(i);
+
+            if (selectedSeatList.size() > 0) {
+                updatePrice();
+            }
         }
 
         @Override

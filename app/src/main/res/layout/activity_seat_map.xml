@@ -32,53 +32,41 @@
         app:layout_constraintStart_toEndOf="@+id/textView"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.constraint.Guideline
-        android:id="@+id/guideline5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.40" />
-
-    <android.support.constraint.Guideline
-        android:id="@+id/guideline6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.75" />
-
     <Spinner
         android:id="@+id/spinnerMovieTimes"
-        android:layout_width="0dp"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guideline6"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/spinnerMovieCinemas"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <Spinner
         android:id="@+id/spinnerMovieCinemas"
-        android:layout_width="0dp"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:padding="8dp"
-        app:layout_constraintEnd_toStartOf="@+id/guideline6"
-        app:layout_constraintStart_toStartOf="@+id/guideline5"
+        app:layout_constraintEnd_toStartOf="@+id/spinnerMovieTimes"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/spinnerMovieDates"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
     <Spinner
         android:id="@+id/spinnerMovieDates"
-        android:layout_width="0dp"
+        android:layout_width="140dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:padding="8dp"
-        app:layout_constraintEnd_toStartOf="@+id/guideline5"
+        app:layout_constraintEnd_toStartOf="@+id/spinnerMovieCinemas"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
@@ -87,7 +75,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.20" />
+        app:layout_constraintGuide_percent="0.14" />
 
     <by.anatoldeveloper.hallscheme.view.ZoomableImageView
         android:id="@+id/imageView"
@@ -221,7 +209,6 @@
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:background="@color/orange"
         app:layout_constraintBottom_toTopOf="@+id/textViewTotalPrice"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
