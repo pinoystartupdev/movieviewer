@@ -28,6 +28,7 @@ import com.pinoystartupdev.movieviewer.pojo.MovieScheduleTimesDetails;
 import com.pinoystartupdev.movieviewer.pojo.SeatMap;
 import com.pinoystartupdev.movieviewer.util.SeatMapUtilities;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -304,9 +305,14 @@ public class SeatMapActivity extends AppCompatActivity {
     }
 
     private void updatePrice() {
+        DecimalFormat formatter = new DecimalFormat("'PHP' #,###,###.00");
+
         int currentPrice = Integer.valueOf(currentMovieScheduleTimeDetails.getPrice()) * selectedSeatList.size();
 
-        textViewTotalPrice.setText("PHP".concat(String.valueOf(currentPrice)));
+        String formattedCurrentPrice = formatter.format(currentPrice);
+
+
+        textViewTotalPrice.setText(formattedCurrentPrice);
     }
 
     class MySpinnerMovieDateOnItemSelectedListener implements AdapterView.OnItemSelectedListener {
