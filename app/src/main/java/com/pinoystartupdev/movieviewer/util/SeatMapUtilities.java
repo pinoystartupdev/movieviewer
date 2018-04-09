@@ -1,6 +1,7 @@
 package com.pinoystartupdev.movieviewer.util;
 
 import android.graphics.Color;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.pinoystartupdev.movieviewer.pojo.SeatMap;
@@ -283,6 +284,126 @@ public class SeatMapUtilities {
         return seats;
     }
 
+    public static void generateSeatmap(SeatMap seatMap, MySeatMapCallback mySeatMapCallback) {
+        /*generate two dimensional array from seatMap object*/
+
+        int rowCount = seatMap.getSeatPlacementList().size();
+        int columnCount = seatMap.getSeatPlacementList().get(0).size();
+
+        Log.e("zdxcvklasdf", "rowCount=" + rowCount);
+        Log.e("zdxcvklasdf", "columnCount=" + columnCount);
+
+        columnCount += 2;
+
+        Seat seats[][] = new Seat[rowCount][columnCount];
+        List<Pair<Integer, String>> seatNumberManifest = new ArrayList<>();
+
+        /*
+        *
+        * LOGS OF SEAT PLACEMENT
+        *
+        * */
+
+        Log.e("ajkhsdf", String.valueOf(seatMap.getSeatAvailablility().getSeatCount()));
+        Log.e("ajkhsdf", "+++++++++++++++++++++++++++++++++++++++++++++++++");
+        Log.e("ajkhsdf", "+++++++++++++++ SEAT AVAILABILITY +++++++++++++++");
+        Log.e("ajkhsdf", "+++++++++++++++++++++++++++++++++++++++++++++++++");
+
+        char rowId = 'A';
+        int availableSeats = 0;
+        int reservedSeats = 0;
+        int totalSeats = 0;
+        int placeholder = 0;
+
+        List<List<String>> seatPlacementList = seatMap.getSeatPlacementList();
+
+        for (int i = 0; i < seatPlacementList.size(); i++) {
+            List<String> seatNumberList = seatPlacementList.get(i);
+
+            Log.e("ajkhsdf", "=============ROw "  + rowId + "=============");
+            seatNumberList.add(0, "LABEL");
+            seatNumberList.add(seatNumberList.size(), "LABEL");
+
+            for (int j = 0; j < seatNumberList.size(); j++) {
+                String seatNumber = seatNumberList.get(j);
+
+                SeatExample seat = new SeatExample();
+
+                switch (seatNumber) {
+                    case "a(30)":
+                    case "b(20)":
+                    case "A33":
+                        String left = "";
+                        String right = "";
+
+                        try {
+                            left = seatNumberList.get(seatNumberList.indexOf(seatNumber) - 1) + "<<<";
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            right = ">>>" + seatNumberList.get(seatNumberList.indexOf(seatNumber) + 1);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        Log.e("ajkhsdf", left  + "[AISLE]" + right);
+                        seat.status = HallScheme.SeatStatus.EMPTY;
+                        placeholder++;
+                        break;
+                    case "LABEL":
+                        seat.status = HallScheme.SeatStatus.INFO;
+                        seat.marker = String.valueOf(rowId);
+                        placeholder++;
+                        break;
+                    default:
+                        if (seatMap.getSeatAvailablility().getAvailableSeatsList().indexOf(seatNumber) != -1) {
+                            Log.e("ajkhsdf", seatNumber + " AVAILABLE");
+
+                            int seatId = i * columnCount + (j+1);
+
+                            seat.id = seatId;
+                            seat.selectedSeatMarker = "\u2713";
+                            seat.status = HallScheme.SeatStatus.FREE;
+
+                            seatNumberManifest.add(Pair.create(seatId, seatNumber));
+                            availableSeats ++;
+                        } else {
+                            Log.e("ajkhsdf", seatNumber + " RESERVED");
+
+                            seat.status = HallScheme.SeatStatus.BUSY;
+
+                            reservedSeats ++;
+                        }
+
+                        totalSeats ++;
+                }
+
+                seats[i][j] = seat;
+            }
+
+            rowId++;
+        }
+
+        Log.e("ajkhsdf", totalSeats + "TOTAL SEATS");
+        Log.e("ajkhsdf", availableSeats + "AVAILABLE SEATS");
+        Log.e("ajkhsdf", reservedSeats + "AVAILABLE SEATS");
+        Log.e("ajkhsdf", placeholder + "PLACEHOLDER");
+
+        mySeatMapCallback.generateSuccess(seats, seatNumberManifest);
+    }
+
+    public Pair<Integer, String> getSeatNumber(List<Pair<Integer, String>> seatNumberManifest, Integer id) {
+        for (Pair<Integer, String> seatNumber : seatNumberManifest) {
+            if (seatNumber.first.equals(id)) {
+                return seatNumber;
+            }
+        }
+
+        return null;
+    }
+
     public void generateLogsForSeatMap (SeatMap seatMap) {
                 /*
         *
@@ -375,6 +496,10 @@ public class SeatMapUtilities {
         Log.e("ajkhsdf", availableSeats + "AVAILABLE SEATS");
         Log.e("ajkhsdf", reservedSeats + "AVAILABLE SEATS");
         Log.e("ajkhsdf", placeholder + "PLACEHOLDER");
+    }
+
+    public interface MySeatMapCallback {
+        void generateSuccess(Seat[][] seats, List<Pair<Integer, String>> seatNumberManifest);
     }
 
     public static class SeatExample implements Seat {

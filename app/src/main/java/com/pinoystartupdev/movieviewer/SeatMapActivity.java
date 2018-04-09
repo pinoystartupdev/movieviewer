@@ -3,8 +3,11 @@ package com.pinoystartupdev.movieviewer;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,6 +16,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.pinoystartupdev.movieviewer.adapter.SelectedSeatRecyclerViewAdapter;
 import com.pinoystartupdev.movieviewer.network.APIClient;
 import com.pinoystartupdev.movieviewer.network.MovieViewerNetworkInterface;
 import com.pinoystartupdev.movieviewer.pojo.MovieScheduleCinemaDetails;
@@ -22,6 +26,7 @@ import com.pinoystartupdev.movieviewer.pojo.MovieSchedule;
 import com.pinoystartupdev.movieviewer.pojo.MovieScheduleTimes;
 import com.pinoystartupdev.movieviewer.pojo.MovieScheduleTimesDetails;
 import com.pinoystartupdev.movieviewer.pojo.SeatMap;
+import com.pinoystartupdev.movieviewer.util.SeatMapUtilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +37,7 @@ import butterknife.ButterKnife;
 import by.anatoldeveloper.hallscheme.hall.HallScheme;
 import by.anatoldeveloper.hallscheme.hall.ScenePosition;
 import by.anatoldeveloper.hallscheme.hall.Seat;
+import by.anatoldeveloper.hallscheme.hall.SeatListener;
 import by.anatoldeveloper.hallscheme.view.ZoomableImageView;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,6 +59,9 @@ public class SeatMapActivity extends AppCompatActivity {
     @BindView(R.id.textViewColorReserved) View textViewColorReserved;
     @BindView(R.id.textViewColorAvailable) View textViewColorAvailable;
 
+    @BindView(R.id.recyclerViewSelectedSeats)
+    RecyclerView recyclerViewSelectedSeats;
+
     @BindViews({ R.id.textViewSelectedSeatsLabel, R.id.recyclerViewSelectedSeats, R.id.textViewTotalPriceLabel, R.id.textViewTotalPrice })
     List<View> viewsOfListsForSelectionDisplay;
 
@@ -62,16 +71,19 @@ public class SeatMapActivity extends AppCompatActivity {
     MovieScheduleCinemas movieScheduleCinemas;
     MovieScheduleTimes movieScheduleTimes;
 
+    List<Pair<Integer, String>> selectedSeatList;
+    List<String> seatNumberManifest;
+
     @BindView(R.id.imageView)
     ZoomableImageView imageView;
 
-    static final ButterKnife.Action<View> GONE = new ButterKnife.Action<View>() {
+    static final ButterKnife.Action<View> INVISIBLE = new ButterKnife.Action<View>() {
         @Override public void apply(View view, int index) {
-            view.setVisibility(View.GONE);
+            view.setVisibility(View.INVISIBLE);
         }
     };
-    static final ButterKnife.Setter<View, Boolean> VISIBLE = new ButterKnife.Setter<View, Boolean>() {
-        @Override public void set(View view, Boolean value, int index) {
+    static final ButterKnife.Action<View> VISIBLE = new ButterKnife.Action<View>() {
+        @Override public void apply(View view, int index) {
             view.setVisibility(View.VISIBLE);
         }
     };
@@ -86,16 +98,24 @@ public class SeatMapActivity extends AppCompatActivity {
         setContentView(R.layout.activity_seat_map);
         ButterKnife.bind(this);
 
-        ButterKnife.apply(viewsOfListsForSelectionDisplay, GONE);
+        ButterKnife.apply(viewsOfListsForSelectionDisplay, INVISIBLE);
 
         movieScheduleDateList = new ArrayList<>();
         movieScheduleCinemasList = new ArrayList<>();
         movieScheduleTimesList = new ArrayList<>();
 
+        selectedSeatList = new ArrayList<>();
+        seatNumberManifest = new ArrayList<>();
+
         textViewColorAvailable.setBackgroundColor(Color.GRAY);
         textViewColorReserved.setBackgroundColor(Color.BLUE);
         textViewColorSelected.setBackgroundColor(Color.RED);
         ((TextView) textViewColorSelected).setText(" \u2713");
+
+        LinearLayoutManager linearLayoutManagerForWildCard = new LinearLayoutManager(SeatMapActivity.this, LinearLayoutManager.HORIZONTAL, false);
+        recyclerViewSelectedSeats.setLayoutManager(linearLayoutManagerForWildCard);
+        recyclerViewSelectedSeats.setAdapter(new SelectedSeatRecyclerViewAdapter(SeatMapActivity.this, selectedSeatList));
+
 
         MovieViewerNetworkInterface movieViewerNetworkInterface = APIClient.getClient().create(MovieViewerNetworkInterface.class);
 
@@ -191,39 +211,69 @@ public class SeatMapActivity extends AppCompatActivity {
 
                 /*LAYOUT SEATMAP*/
 
-                Seat seats[][] = generateSeatmap(seatMap);
+                generateSeatmap(seatMap, new SeatMapUtilities.MySeatMapCallback() {
+                    @Override
+                    public void generateSuccess(Seat[][] seats, final List<Pair<Integer, String>> seatNumberManifest) {
+                        if (imageView != null) {
+                            HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
+                            scheme.setChosenSeatBackgroundColor(Color.RED);
+                            scheme.setChosenSeatTextColor(Color.WHITE);
+                            scheme.setBackgroundColor(Color.WHITE);
+                            scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
+                            scheme.setScenePosition(ScenePosition.NORTH);
+                            scheme.setSceneName("Movie Screen");
 
-                if (imageView != null) {
-                    Log.e("asfdad", "imageView IS NOT NULL");
-                    HallScheme scheme = new HallScheme(imageView, seats, SeatMapActivity.this);
-                    scheme.setChosenSeatBackgroundColor(Color.RED);
-                    scheme.setChosenSeatTextColor(Color.WHITE);
-                    scheme.setBackgroundColor(Color.WHITE);
-                    scheme.setUnavailableSeatBackgroundColor(Color.BLUE);
-                    scheme.setScenePosition(ScenePosition.NORTH);
-                    scheme.setSceneName("Movie Screen");
+                            scheme.setSeatListener(new SeatListener() {
 
-//            scheme.setSeatListener(new SeatListener() {
-//
-//                @Override
-//                public void selectSeat(int id) {
-//                    Toast.makeText(SeatMapActivity.this, "select seat " + id, Toast.LENGTH_SHORT).show();
-//                }
-//
-//                @Override
-//                public void unSelectSeat(int id) {
-//                    Toast.makeText(SeatMapActivity.this, "unSelect seat " + id, Toast.LENGTH_SHORT).show();
-//                }
-//
-//            });
-                } else {
-                    Log.e("asfdad", "imageView IS NULL");
-                }
+                                @Override
+                                public void selectSeat(int id) {
+                                    Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
+
+                                    if (seatNumber != null) {
+                                        selectedSeatList.add(seatNumber);
+
+                                        ButterKnife.apply(viewsOfListsForSelectionDisplay, VISIBLE);
+
+                                        recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
+                                    } else {
+                                        Toast.makeText(SeatMapActivity.this, "can not select seat " + id, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void unSelectSeat(int id) {
+                                    try {
+                                        Pair<Integer, String> seatNumber = new SeatMapUtilities().getSeatNumber(seatNumberManifest, id);
+
+                                        if (seatNumber != null) {
+                                            selectedSeatList.remove(seatNumber);
+
+                                            if (!(selectedSeatList.size() > 0)) {
+                                                ButterKnife.apply(viewsOfListsForSelectionDisplay, INVISIBLE);
+                                            }
+
+                                            recyclerViewSelectedSeats.getAdapter().notifyDataSetChanged();
+                                        } else {
+                                            Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
+                                        }
+                                    } catch (IndexOutOfBoundsException e) {
+                                        e.printStackTrace();
+
+                                        Toast.makeText(SeatMapActivity.this, "can not unSelect seat " + id, Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                            });
+                        }
+                    }
+                });
+
+
             }
 
             @Override
             public void onFailure(Call<SeatMap> call, Throwable t) {
-                Log.e("ajkhsdf", "FAILURE>>>" + t.getMessage());
+                Toast.makeText(SeatMapActivity.this, "Failed to load seat map.", Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -2,5 +2,78 @@
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#ff4081</color>
+
+    <!--Indigo 500-->
+    <color name="primary_500">#000000</color>
+    <!--Indigo 700-->
+    <color name="primary_700">#303F9F</color>
+    <!--Pink 500-->
+    <color name="accent_500">#E91E63</color>
+    <!--Pink 700-->
+    <color name="accent_700">#C2185B</color>
+    <color name="black_trans80">#14000000</color>
+
+    <color name="blue_grey">#455A64</color>
+    <color name="red">#f44336</color>
+    <color name="pink">#e91e63</color>
+    <color name="purple">#9C27B0</color>
+    <color name="deep_purple">#673AB7</color>
+    <color name="indigo">#3F51B5</color>
+    <color name="blue">#2196f3</color>
+    <color name="light_blue">#03a9f4</color>
+    <color name="cyan">#00BCD4</color>
+    <color name="teal">#009688</color>
+    <color name="green">#4CAF50</color>
+    <color name="light_green">#8BC34A</color>
+    <color name="lime">#CDDC39</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="amber">#ffc107</color>
+    <color name="orange">#FF9800</color>
+    <color name="deep_orange">#ff5722</color>
+    <color name="white">#ffffff</color>
+    <color name="white_click">#CECECE</color>
+    <color name="black">#000000</color>
+
+    <color name="light_gray">#d3d3d3</color>
+    <color name="dark_gray">#474646</color>
+
+    <color name="light_bg">#FAFAFA</color>
+    <color name="dark_bg">#CACACA</color>
+
+    <color name="red_link">#FF0000</color>
+    <color name="red_link_pressed">#9B0000</color>
+
+    <color name="text_link">#0000EE</color>
+    <color name="text_link_pressed">#0000B4</color>
+
+    <color name="progress_bar_tint">#4BABF4</color>
+
+
+
+
+
+
+
+
+
+    <color name="green_01">#A9E2AD</color>
+    <color name="green_02">#77CC7D</color>
+    <color name="green_03">#4CAF52</color>
+    <color name="green_04">#2D9434</color>
+    <color name="green_05">#15781B</color>
+
+    <color name="pink_01">#fdcbdc</color>
+    <color name="pink_02">#f899b9</color>
+    <color name="pink_03">#f2709c</color>
+    <color name="pink_04">#EB4E83</color>
+    <color name="pink_05">#e22e6b</color>
+
+    <color name="feed_item">#fafafa</color>
+    <color name="feed_sub_item">#77CC7D</color>
+    <color name="feed_list_bg">#C9C7C7</color>
+
+    <color name="seller_upload_photo_bg">#d3d3d3</color>
 </resources>
+
+
